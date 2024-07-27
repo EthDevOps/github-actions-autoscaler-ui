@@ -1,6 +1,10 @@
 <template>
   <div>
     <h1>Runners Overview</h1>
+    <div>
+      <p>Search for runner: <input type="text" v-model="searchRunner" placeholder="runner name" /></p>
+      <p><input type="checkbox" v-model.lazy="searchOnlyOnline" id="online"/><label for="online">Show only online runners</label></p>
+    </div>
     <table>
       <thead>
         <tr>
@@ -19,8 +23,7 @@
         <template v-for="runner in sortedRunners" :key="runner.runnerId">
         <tr>
           <td>{{ getStatusIcon(runner.isOnline)}} <a target="_blank" title="Show monitoring" :href="'https://grafana.ethquokkaops.io/d/rYdddlPWk/node-exporter-full?orgId=1&var-DS_PROMETHEUS=default&var-job=integrations%2Fnode_exporter&var-node='+ runner.hostname +':9090'">📈</a> {{ runner.hostname }}</td>
-          <td v-if="runner.jobId">🚀 Job assigned</td>
-          <td v-else>🔎 No job assigned</td>
+          <td>{{ getRunnerJobState(runner)}}</td>
           <td><a :href="'https://github.com/' + runner.owner" target="_blank">{{ runner.owner }}</a></td>
           <td>{{ runner.size }}</td>
           <td><code>{{ runner.iPv4 }}</code></td>
@@ -99,16 +102,27 @@ export default {
     return {
       runners: [],
       visibleRunners: [],
-      jobs: []
+      jobs: [],
+      searchRunner: "",
+      searchOnlyOnline: false
     };
   },
   mounted() {
     this.fetchRunners();
-    setInterval(this.fetchRunners, 2000);
+    setInterval(this.fetchRunners, 10000);
   },
   computed: {
     sortedRunners() {
-      return this.runners.map(runner => ({
+      console.log("Triggered compute")
+      return this.runners
+        .filter(runner => {
+          if(this.searchOnlyOnline === true) {
+            return runner.isOnline && runner.hostname.includes(this.searchRunner)
+          } else {
+            return runner.hostname.includes(this.searchRunner)
+          }
+        })
+        .map(runner => ({
         ...runner,
         lifecycle: runner.lifecycle.slice().sort((a, b) => new Date(a.eventTimeUtc) - new Date(b.eventTimeUtc)),
         job: this.jobs.find(j => j.runnerId === runner.runnerId)
@@ -116,6 +130,19 @@ export default {
     }
   },
   methods: {
+    getRunnerJobState(runner) {
+      if(runner.jobId) {
+        if(runner.job) {
+          return this.getJobState(runner.job.db.state); 
+        }
+        else {
+          return "welp"
+        }
+      }
+      else {
+        return "🔎 No job assigned";
+      }
+    },
     getCommitUrl(sha, repo) {
       return "https://github.com/" + repo + "/commit/" + sha
     },
@@ -144,9 +171,9 @@ export default {
     getJobState(statusCode) {
       const JobState = {
         0: "Unknown",
-        1: "Queued",
-        2: "In Progress",
-        3: "Completed"
+        1: "⏸️  Queued",
+        2: "▶️  In Progress",
+        3: "✅ Completed"
       };
       if (Object.prototype.hasOwnProperty.call(JobState, statusCode)) {
         return JobState[statusCode];
@@ -154,44 +181,46 @@ export default {
       return "Unknown";  // Default case if status code is not found
 
     },
-    fetchRunners() {
-      axios.get(process.env.VUE_APP_API_URL + '/api/get-runners')
-        .then(response => {
-          this.runners = response.data;
-          for(var od of this.visibleRunners) {
-            let r = this.runners.find(x => x.runnerId === od)
-            this.fetchJob(r.jobId, od)
-          }
+    async fetchRunners() {
+      let runnerResp = await axios.get(process.env.VUE_APP_API_URL + '/api/get-runners');
+      this.runners = runnerResp.data;
+
+      // Fetch job infos
+      for(var r of this.runners) {
+        if(r.jobId) {
+          let loadGh = this.visibleRunners.includes(r.runnerId)
+          await this.fetchJob(r.jobId, r.runnerId, loadGh)
+        }
+      }
           
-        })
-        .catch(error => {
-          console.error('There was an error fetching the runners:', error);
-        });
     },
-    fetchJob(jobid,runnerid) {
+    async fetchJob(jobid,runnerid, withGithub) {
       if(!jobid) { return }
-      axios.get(process.env.VUE_APP_API_URL + '/api/get-job/'+jobid)
-        .then(response => {
-          const index = this.jobs.findIndex(job => job.runnerId === runnerid);
+      let jobDb = await axios.get(process.env.VUE_APP_API_URL + '/api/get-job/'+jobid);
 
-          if (index !== -1) {
-              this.jobs.splice(index, 1);
-          }
+      const index = this.jobs.findIndex(job => job.runnerId === runnerid);
 
-          this.jobs.push({
-            runnerId: runnerid,
-            db: response.data,
-            gh: {}
-          })
-          axios.get(response.data.jobUrl).then(resp => {
-            let j = this.jobs.find(j => j.runnerId === runnerid);
-            j['gh'] = resp.data;
-          })
+      if (index !== -1) {
+          this.jobs.splice(index, 1);
+      }
+
+      this.jobs.push({
+        runnerId: runnerid,
+        db: jobDb.data,
+        gh: {}
+      })
+
+      if(withGithub)  {
+        try {
+        let resp = await axios.get(jobDb.data.jobUrl);
+        let j = this.jobs.find(j => j.runnerId === runnerid);
+        j['gh'] = resp.data;
+        }
+        catch {
+          console.log("unable to query github")
+        }
+      }
           
-        })
-        .catch(error => {
-          console.error('There was an error fetching the runners:', error);
-        });
 
     },
     toggleDetails(id,jobid) {
@@ -199,7 +228,7 @@ export default {
       if (index > -1) {
         this.visibleRunners.splice(index, 1);
       } else {
-        this.fetchJob(jobid,id)
+        this.fetchJob(jobid,id,true)
         this.visibleRunners.push(id);
       }
     }
