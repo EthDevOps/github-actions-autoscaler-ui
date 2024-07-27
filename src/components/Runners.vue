@@ -41,12 +41,14 @@
                 <thead>
                   <tr>
                     <th>Event Time</th>
+                    <th>Status</th>
                     <th>Event</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="event in runner.lifecycle" :key="event.runnerLifecycleId">
                     <td>{{ event.eventTimeUtc }}</td>
+                    <td>{{ getRunnerState(event.status)}}</td>
                     <td>{{ event.event }}</td>
                   </tr>
                 </tbody>
@@ -170,6 +172,12 @@ export default {
       if(!jobid) { return }
       axios.get('http://localhost:8080/api/get-job/'+jobid)
         .then(response => {
+          const index = this.jobs.findIndex(job => job.runnerId === runnerid);
+
+          if (index !== -1) {
+              this.jobs.splice(index, 1);
+          }
+
           this.jobs.push({
             runnerId: runnerid,
             db: response.data,
@@ -206,7 +214,7 @@ table {
 }
 
 th, td {
-  border: 1px solid black;
+  border: 1px solid #6EACDA;
   padding: 8px;
   text-align: left;
 }
