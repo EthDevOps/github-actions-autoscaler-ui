@@ -1,0 +1,64 @@
+name: Build and Deploy Vue.js App
+
+on:
+  push:
+    branches:
+      - main  # Set to the branch name you use for releases
+    tags: ['v*.*.*']
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build_vue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'  # Set this to the node version you use
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Vue.js project
+        run: npm run build
+      
+      - name: Upload dist directory to workspace
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  build_and_push_docker:
+    needs: build_vue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download dist directory
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/vue-app:${{ github.sha }}
+
+
