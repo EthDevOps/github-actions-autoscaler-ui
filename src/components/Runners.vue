@@ -155,7 +155,7 @@ export default {
 
     },
     fetchRunners() {
-      axios.get('http://localhost:8080/api/get-runners')
+      axios.get(process.env.API_URL + '/api/get-runners')
         .then(response => {
           this.runners = response.data;
           for(var od of this.visibleRunners) {
@@ -170,7 +170,7 @@ export default {
     },
     fetchJob(jobid,runnerid) {
       if(!jobid) { return }
-      axios.get('http://localhost:8080/api/get-job/'+jobid)
+      axios.get(process.env.API_URL + '/api/get-job/'+jobid)
         .then(response => {
           const index = this.jobs.findIndex(job => job.runnerId === runnerid);
 
