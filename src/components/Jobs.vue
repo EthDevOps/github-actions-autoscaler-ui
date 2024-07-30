@@ -9,6 +9,16 @@
     <n-form-item>
       <n-button @click="fetchJobs">Refresh</n-button>
     </n-form-item>
+    <n-form-item>
+      <n-switch v-model:value="autoRefresh">
+        <template #checked>
+          Auto-update enabled
+        </template>
+        <template #unchecked>
+          Auto-update disabled
+        </template>
+      </n-switch>
+    </n-form-item>
   </n-form>
   <n-table striped>
     <thead>
@@ -42,11 +52,28 @@
 import axios from 'axios';
 import {parseJobState} from '../common'
 export default {
-  name: 'RunnersView',
+  name: 'JobsView',
+  watch: {
+    autoRefresh(newVal) {
+      if (newVal) {
+        // Start auto-refreshing
+        this.interval = setInterval(this.fetchJobs, 2000); // Fetch jobs every 2000 milliseconds (2 seconds)
+      } else {
+        // Stop auto-refreshing
+        clearInterval(this.interval);
+      }
+    }
+  },
+  beforeUnmount() {
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
+  },
   data() {
     return {
       jobs: [],
-      hideComplete: false
+      hideComplete: false,
+      autoRefresh: false
     };
   },
   mounted() {

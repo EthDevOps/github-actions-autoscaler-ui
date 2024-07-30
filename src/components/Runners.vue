@@ -13,6 +13,16 @@
       <n-form-item>
         <n-button @click="fetchrunners">Refresh</n-button>
       </n-form-item>
+      <n-form-item>
+        <n-switch v-model:value="autoRefresh">
+          <template #checked>
+            Auto-update enabled
+          </template>
+          <template #unchecked>
+            Auto-update disabled
+          </template>
+        </n-switch>
+      </n-form-item>
     </n-form>
     <n-drawer v-model:show="show" :width="'60%'">
       <n-drawer-content :title="'Runner Details for ' + this.selectedRunner.hostname" closable>
@@ -68,13 +78,30 @@ export default {
   components: {
     RunnerDetails
   },
+  watch: {
+    autoRefresh(newVal) {
+      if (newVal) {
+        // Start auto-refreshing
+        this.interval = setInterval(this.fetchRunners, 2000); // Fetch jobs every 2000 milliseconds (2 seconds)
+      } else {
+        // Stop auto-refreshing
+        clearInterval(this.interval);
+      }
+    }
+  },
+  beforeUnmount() {
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
+  },
   data() {
     return {
       runners: [],
       jobs: [],
       searchRunner: "",
       searchOnlyOnline: false,
-      selectedRunner: {}
+      selectedRunner: {},
+      autoRefresh: false,
     };
   },
   setup() {
@@ -84,7 +111,6 @@ export default {
   },
   mounted() {
     this.fetchRunners();
-    setInterval(this.fetchRunners, 10000);
   },
   computed: {
     sortedRunners() {
