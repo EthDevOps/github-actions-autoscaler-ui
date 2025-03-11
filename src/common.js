@@ -19,10 +19,11 @@ export function parseRunnerState(statusCode) {
 
 export function parseJobState(statusCode) {
   const JobState = {
-    0: "Unknown",
+    0: "❓ Unknown",
     1: "⏸️  Queued",
     2: "▶️  In Progress",
-    3: "✅ Completed"
+    3: "✅ Completed",
+    4: "👻 Vanished"
   };
   if (Object.prototype.hasOwnProperty.call(JobState, statusCode)) {
     return JobState[statusCode];

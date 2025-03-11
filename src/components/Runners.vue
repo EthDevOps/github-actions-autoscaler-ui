@@ -11,7 +11,10 @@
           <n-input v-model:value="searchRunner" placeholder="Enter runner name"/>
       </n-form-item>
       <n-form-item>
-        <n-button @click="fetchrunners">Refresh</n-button>
+        <n-input v-model:value="runnerLimit"/>
+      </n-form-item>
+      <n-form-item>
+        <n-button @click="fetchRunners">Refresh</n-button>
       </n-form-item>
       <n-form-item>
         <n-switch v-model:value="autoRefresh">
@@ -22,6 +25,9 @@
             Auto-update disabled
           </template>
         </n-switch>
+      </n-form-item>
+      <n-form-item>
+        <span>Last refresh: {{ lastRefresh }} </span>
       </n-form-item>
     </n-form>
     <n-drawer v-model:show="show" :width="'60%'">
@@ -102,6 +108,9 @@ export default {
       searchOnlyOnline: false,
       selectedRunner: {},
       autoRefresh: false,
+      lastRefresh: "N/A",
+      runnerLimit: 100
+
     };
   },
   setup() {
@@ -146,11 +155,12 @@ export default {
       return parseJobState(code)
     },
     async fetchRunners() {
-      let runnerResp = await axios.get(process.env.VUE_APP_API_URL + '/api/get-runners');
+      let runnerResp = await axios.get(process.env.VUE_APP_API_URL + '/api/get-runners?limit=' + this.runnerLimit);
       this.runners = runnerResp.data.map(runner => ({
         ...runner,
         lifecycle: runner.lifecycle.slice().sort((a, b) => new Date(a.eventTimeUtc) - new Date(b.eventTimeUtc)),
       }));
+      this.lastRefresh = new Date().toLocaleTimeString();
 
     },
     async fetchJob(jobid,runnerid) {
