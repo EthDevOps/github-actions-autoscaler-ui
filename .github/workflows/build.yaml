@@ -1,6 +1,7 @@
 name: Build and Deploy Vue.js App
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main  # Set to the branch name you use for releases
