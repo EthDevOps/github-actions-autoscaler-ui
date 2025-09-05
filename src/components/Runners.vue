@@ -47,6 +47,7 @@
           <th>Cloud</th>
           <th>Profile</th>
           <th>Last State</th>
+          <th>SSH</th>
           <th>Details</th>
         </tr>
       </thead>
@@ -62,6 +63,9 @@
           <td>{{ runner.cloud }}</td>
           <td>{{ runner.profile }}</td>
           <td>{{ getRunnerState(runner.lastState) }}</td>
+          <td>
+            <n-button type="tertiary" @click="copySshCommand(runner.iPv4)" :disabled="!runner.iPv4">Copy SSH</n-button>
+          </td>
           <td>
             <n-button type="primary" @click="toggleDetails(runner.runnerId, runner.jobId)">Show Details</n-button>
           </td>
@@ -182,6 +186,25 @@ export default {
     toggleDetails(id) {
       this.selectedRunner = this.runners.find(x => x.runnerId === id);
       this.show = true
+    },
+    async copySshCommand(ipv4) {
+      if (!ipv4) return;
+      
+      const sshCommand = `ssh devops@${ipv4}`;
+      
+      try {
+        await navigator.clipboard.writeText(sshCommand);
+        this.$message.success('SSH command copied to clipboard');
+      } catch (err) {
+        // Fallback for older browsers or when clipboard API is not available
+        const textArea = document.createElement('textarea');
+        textArea.value = sshCommand;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        this.$message.success('SSH command copied to clipboard');
+      }
     }
   }
 }
