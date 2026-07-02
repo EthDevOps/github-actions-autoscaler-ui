@@ -1,23 +1,34 @@
 import { createApp } from 'vue'
-import naive from "naive-ui";
+import { createRouter, createWebHashHistory } from 'vue-router'
+import PrimeVue from 'primevue/config'
+import ToastService from 'primevue/toastservice'
+import ConfirmationService from 'primevue/confirmationservice'
+import Tooltip from 'primevue/tooltip'
+
+import 'primeicons/primeicons.css'
+import './style.css'
+
 import App from './App.vue'
-
-import RunnersView from './components/Runners.vue'
-import JobsView from './components/Jobs.vue'
-import { createMemoryHistory, createRouter } from 'vue-router'
-
-const routes = [
-  { path: '/', component: RunnersView },
-  { path: '/runners', component: RunnersView },
-  { path: '/jobs', component: JobsView },
-]
+import { AppTheme } from './theme'
+import { routes } from './router'
 
 const router = createRouter({
-  history: createMemoryHistory(),
+  history: createWebHashHistory(),
   routes,
 })
 
-const app = createApp(App);
-app.use(router);
-app.use(naive);
+const app = createApp(App)
+app.use(router)
+app.use(PrimeVue, {
+  theme: {
+    preset: AppTheme,
+    options: {
+      darkModeSelector: '.app-dark',
+      cssLayer: false,
+    },
+  },
+})
+app.use(ToastService)
+app.use(ConfirmationService)
+app.directive('tooltip', Tooltip)
 app.mount('#app')

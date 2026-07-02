@@ -27,6 +27,13 @@ jobs:
 
       - name: Build Vue.js project
         run: npm run build
+        env:
+          # Baked into the bundle at build time. The viewer sits behind Teleport,
+          # which provides access control, so embedding the key is acceptable.
+          # When the secret is unset this is empty, matching .env.production.
+          # Set the VITE_API_URL in .env.production (do not pass an empty env var here,
+          # as a process env var would override the .env file value).
+          VITE_API_KEY: ${{ secrets.VIEWER_API_KEY }}
       
       - name: Upload dist directory to workspace
         uses: actions/upload-artifact@v4

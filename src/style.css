@@ -1,0 +1,242 @@
+:root {
+  --app-sidebar-width: 244px;
+  --app-topbar-height: 60px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--p-surface-950);
+  color: var(--p-text-color);
+}
+
+#app {
+  min-height: 100vh;
+}
+
+/* ---- Layout shell ---- */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  width: var(--app-sidebar-width);
+  flex-shrink: 0;
+  position: fixed;
+  inset: 0 auto 0 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--p-surface-900);
+  border-right: 1px solid var(--p-surface-800);
+  z-index: 20;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.15rem 1.25rem;
+  font-weight: 700;
+  font-size: 0.98rem;
+  letter-spacing: 0.01em;
+  border-bottom: 1px solid var(--p-surface-800);
+}
+
+.app-brand .brand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--p-primary-500), var(--p-primary-700));
+  color: #fff;
+  font-size: 1rem;
+}
+
+.app-brand small {
+  display: block;
+  font-weight: 400;
+  font-size: 0.7rem;
+  color: var(--p-text-muted-color);
+}
+
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.75rem;
+  flex: 1;
+}
+
+.app-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  color: var(--p-text-muted-color);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+
+.app-nav a:hover {
+  background: var(--p-surface-800);
+  color: var(--p-text-color);
+}
+
+.app-nav a.router-link-active {
+  background: color-mix(in srgb, var(--p-primary-500) 18%, transparent);
+  color: var(--p-primary-300);
+}
+
+.app-nav a .nav-count {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--p-surface-800);
+  color: var(--p-text-muted-color);
+}
+
+.app-nav a.router-link-active .nav-count {
+  background: var(--p-primary-500);
+  color: #fff;
+}
+
+.app-nav a .nav-count.alert {
+  background: var(--p-red-500);
+  color: #fff;
+}
+
+.app-sidebar-footer {
+  padding: 0.85rem 1.1rem;
+  border-top: 1px solid var(--p-surface-800);
+  font-size: 0.72rem;
+  color: var(--p-text-muted-color);
+}
+
+.app-main {
+  flex: 1;
+  margin-left: var(--app-sidebar-width);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-topbar {
+  height: var(--app-topbar-height);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid var(--p-surface-800);
+  background: color-mix(in srgb, var(--p-surface-900) 80%, transparent);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 15;
+}
+
+.app-topbar h1 {
+  font-size: 1.05rem;
+  font-weight: 650;
+  margin: 0;
+}
+
+.app-topbar .spacer {
+  flex: 1;
+}
+
+.app-topbar .identity {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--p-text-color);
+  padding: 4px 10px;
+  border: 1px solid var(--p-surface-800);
+  border-radius: 999px;
+}
+
+.app-content {
+  padding: 1.5rem;
+  flex: 1;
+}
+
+/* ---- Utility ---- */
+.page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.page-toolbar .spacer {
+  flex: 1;
+}
+
+.muted {
+  color: var(--p-text-muted-color);
+  font-size: 0.8rem;
+}
+
+.mono {
+  font-family: 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.82rem;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 650;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.link-plain {
+  color: var(--p-primary-300);
+  text-decoration: none;
+}
+.link-plain:hover {
+  text-decoration: underline;
+}
+
+.dt-cell-strong {
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --app-sidebar-width: 64px;
+  }
+  .app-brand .brand-text,
+  .app-nav a span.nav-label,
+  .app-sidebar-footer {
+    display: none;
+  }
+  .app-nav a {
+    justify-content: center;
+  }
+}

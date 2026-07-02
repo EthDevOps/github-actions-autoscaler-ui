@@ -1,0 +1,43 @@
+# nginx config for the viewer container.
+#
+# The viewer is fronted by Teleport, which injects a signed `Teleport-Jwt-Assertion`
+# header on every request it proxies here. We serve the SPA and reverse-proxy /api to
+# the orchestrator on the SAME origin, forwarding that header so the orchestrator can
+# verify the caller's identity. Because it's same-origin, no CORS is involved and the
+# JWT rides along automatically.
+#
+# ORCHESTRATOR_URL is substituted at container start by the nginx image's envsubst
+# (defaults to the public orchestrator address).
+
+server {
+    listen       80;
+    server_name  _;
+
+    root   /usr/share/nginx/html;
+    index  index.html;
+
+    # SPA assets + hash-router fallback.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Reverse-proxy the orchestrator API. The Teleport-Jwt-Assertion header set by
+    # Teleport is forwarded as-is (hyphenated headers are passed through by default).
+    location /api/ {
+        proxy_pass ${ORCHESTRATOR_URL};
+
+        proxy_set_header Host              ${ORCHESTRATOR_HOST};
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Preserve the Teleport identity assertion for backend verification.
+        proxy_set_header Teleport-Jwt-Assertion $http_teleport_jwt_assertion;
+
+        # Needed when proxying to an HTTPS upstream so SNI/cert validation matches.
+        proxy_ssl_server_name on;
+
+        proxy_connect_timeout 10s;
+        proxy_read_timeout    60s;
+    }
+}
